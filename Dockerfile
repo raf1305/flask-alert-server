@@ -1,48 +1,21 @@
-# ===========================
-# Stage 1: Builder
-# ===========================
-FROM python:3.12-alpine AS builder
+# Use an official Python runtime as a parent image
+FROM python:3.12-slim
 
-# Set working directory
+# Set the working directory in the container
 WORKDIR /app
 
-# Install system dependencies (for pip and build tools)
-RUN apk add --no-cache build-base
+# Copy the current directory contents into the container at /app
+COPY . /app
 
-# Copy Python dependencies
-COPY requirements.txt .
+# Install any needed packages specified in requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Install dependencies into a temporary folder
-RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
-
-# Copy application code
-COPY . .
-
-# Create log directory (like your Node example)
-RUN mkdir -p /app/log
-
-
-# ===========================
-# Stage 2: Runtime
-# ===========================
-FROM python:3.12-alpine
-
-# Set working directory
-WORKDIR /app
-
-# Copy dependencies from builder
-COPY --from=builder /install /usr/local
-
-# Copy app code
-COPY --from=builder /app /app
-
-# Expose Flask port
+# Make port 5000 available to the world outside this container
 EXPOSE 5000
 
-# Environment variables (adjust as needed)
-ENV FLASK_APP=app.py \
-    FLASK_RUN_HOST=0.0.0.0 \
-    PYTHONUNBUFFERED=1
+# Define environment variable
+ENV FLASK_APP=server.py
+ENV FLASK_RUN_HOST=0.0.0.0
 
-# Run Flask app
-CMD ["python", "server.py"]
+# Run server.py when the container launches
+CMD ["flask", "run"]
